@@ -2,30 +2,36 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using ForzaMods_CarTable.Resources;
 using Memory;
 
 namespace ForzaMods_CarTable
 {
     public partial class MainWindow : Window
     {
-        Mem M = new Mem();
-        private bool   Attached = false;
+        public Mem M = new Mem();
+        public static MainWindow mw;
+        private bool Attached = false;
         private string Address = "";
+        public bool IsGetIdsOpen = false;
 
         public MainWindow()
         {
             InitializeComponent();
-
-            Task.Run(ForzaAttach);
+            mw = this;
+            Thread AttachThread = new Thread(ForzaAttach);
+            AttachThread.Start();
         }
 
         void ForzaAttach()
         {
             while (true)
             {
+                Thread.Sleep(1000);
                 if (M.OpenProcess("ForzaHorizon5"))
                 {
                     if (Attached)
@@ -78,12 +84,22 @@ namespace ForzaMods_CarTable
         {
             UpdateUI("Scanning for FD Viper Address", "Status");
 
-            await Task.Run(async () =>
+            try
             {
-                Address = (await M.AoBScan("BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00", true, true, false)).FirstOrDefault().ToString("X");
-            });
-
-            UpdateUI("Found the FD Viper Address", "Status");
+                Thread ScanThread = new Thread(async () =>
+                {
+                    Address = (await M.AoBScan("BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00", true, true, false)).FirstOrDefault().ToString("X");
+                    if (Address != "0")
+                        UpdateUI("Found the FD Viper Address", "Status");
+                    else
+                        UpdateUI("Failed at finding the address", "Status");
+                });
+                ScanThread.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         private void List_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -97,6 +113,7 @@ namespace ForzaMods_CarTable
                 {
                     Scan.IsEnabled = false;
                     Swap.IsEnabled = false;
+                    GetIds.IsEnabled = false;
                     ID_Box.IsEnabled = false;
                 });
 
@@ -105,6 +122,7 @@ namespace ForzaMods_CarTable
                 {
                     Scan.IsEnabled = true;
                     Swap.IsEnabled = true;
+                    GetIds.IsEnabled = true;
                     ID_Box.IsEnabled = true;
                 });
 
@@ -114,6 +132,17 @@ namespace ForzaMods_CarTable
                 {
                     Status.Content = "Status: " + text;
                 });
+            }
+        }
+
+        private void GetIds_Click(object sender, RoutedEventArgs e)
+        {
+            var getids = new CarIds();
+
+            if (!IsGetIdsOpen)
+            {
+                getids.Show();
+                IsGetIdsOpen = true;
             }
         }
     }
