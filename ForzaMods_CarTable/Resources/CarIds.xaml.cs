@@ -25,21 +25,20 @@ namespace ForzaMods_CarTable.Resources
             string addr = "";
             Status.Content = "Scanning for the ID Addr";
 
-            Thread ReadThread = new Thread(() =>
+            await Task.Run(async () =>
+            {
+                addr = ((await MainWindow.mw.M.AoBScan("?0 ?? ?? ?? ?? 01 00 00 ?0 ?? ?? ?? ?? 01 00 00 00 01 00 00 00 00 00 00 40 1D ?? ?? F7 7F 00 00 00 00 00 00 00 00 00 00 ?0 ?? ?? ?? ?? 01 00 00 01 00 00 01 01 00 00 00 FF FF FF FF 00 00 00 00 ?0 ?? ?? ?? ?? 01 00 00 ?0 ?? ?? ?? ?? 01 00 00 ?0 2? ?? ?? ?? 01 00 00 12 00 00 00 00 00 00 00 ?0 ?? ?? ?? ?? 01 00 00 29 00 00 00 00 00 00 00 ?0 ?? ?? ?? ?? 01 00 00 ?0 ?? ?? ?? ?? 01 00 00", true, true, false)).FirstOrDefault() + 128).ToString("X");
+            });
+            Status.Content = "Status: Found the ID Addr";
+
+            _ = Task.Run(() =>
             {
                 while (true)
                 {
+                    Thread.Sleep(500);
                     HoveredID.Content = MainWindow.mw.M.Read2Byte(addr);
                 }
             });
-
-            Thread ScanThread = new Thread(async () =>
-            {
-                addr = (await MainWindow.mw.M.AoBScan("", true, true, false)).FirstOrDefault().ToString("X");
-                ReadThread.Start();
-            });
-            ScanThread.Start();
-            Status.Content = "Status: Found the ID Addr";
         }
 
         private void Close_MouseDown(object sender, MouseButtonEventArgs e)
