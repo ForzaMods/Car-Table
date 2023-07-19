@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ForzaMods_CarTable.Resources;
@@ -16,8 +16,12 @@ namespace ForzaMods_CarTable
         public Mem M = new Mem();
         public static MainWindow mw;
         private bool Attached = false;
+        private bool ShowMessageBox = true;
         private string Address = "";
         public bool IsGetIdsOpen = false;
+        public bool GlobalBeta = false; // Set to false for release on github, true is for discord tests
+        public bool FeatureBeta = true; 
+        private string FeatureString = "The Car ID Getting is only a gui part, the app may crash when you click scan"; // Set it when a feature is in beta
 
         public MainWindow()
         {
@@ -25,6 +29,13 @@ namespace ForzaMods_CarTable
             mw = this;
             Thread AttachThread = new Thread(ForzaAttach);
             AttachThread.Start();
+            CultureInfo.CurrentCulture = new CultureInfo("en-GB");
+
+            if (GlobalBeta)
+                MessageBox.Show("This is a beta release, not everything has to work");
+
+            if (FeatureBeta)
+                MessageBox.Show(FeatureString);
         }
 
         void ForzaAttach()
@@ -66,10 +77,13 @@ namespace ForzaMods_CarTable
 
         private void Swap_Click(object sender, RoutedEventArgs e)
         {
-            if (IsNumericInput(ID_Box.Text))
+            if (IsNumericInput(ID_Box.Text) && Address != "0")
             {
                 M.WriteMemory(Address, "2bytes", ID_Box.Text);
                 UpdateUI("Swapped the ID", "Status");
+
+                if (ShowMessageBox)
+                    MessageBox.Show("Please verify if the price changed, if not buy at your own risk. We currently do not guarantee that it works 100%", "Warning");
             }
             else
                 MessageBox.Show("Input accepts only numbers");
@@ -84,22 +98,21 @@ namespace ForzaMods_CarTable
         {
             UpdateUI("Scanning for FD Viper Address", "Status");
 
-            try
+            
+            Thread ScanThread = new Thread(async () =>
             {
-                Thread ScanThread = new Thread(async () =>
+                try
                 {
                     Address = (await M.AoBScan("BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00", true, true, false)).FirstOrDefault().ToString("X");
-                    if (Address != "0")
-                        UpdateUI("Found the FD Viper Address", "Status");
-                    else
-                        UpdateUI("Failed at finding the address", "Status");
-                });
-                ScanThread.Start();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+                }
+                catch { }
+
+                if (Address != "0")
+                    UpdateUI("Found the FD Viper Address", "Status");
+                else
+                    UpdateUI("Failed at finding the address", "Status");
+            });
+            ScanThread.Start();  
         }
         private void List_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -144,6 +157,14 @@ namespace ForzaMods_CarTable
                 getids.Show();
                 IsGetIdsOpen = true;
             }
+        }
+
+        private void MessageBoxSwitch_Toggled(object sender, RoutedEventArgs e)
+        {
+            if ((bool)MessageboxSwitch.IsChecked)
+                ShowMessageBox = true;
+            else 
+                ShowMessageBox = false;
         }
     }
 }

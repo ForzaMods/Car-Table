@@ -49,7 +49,7 @@
         <Label x:Name="Status" Focusable="False"
                Content="Status: Doing Nothing"
                FontSize="12"
-               VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5"/>
+               VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="10,0,0,33"/>
 
         <Label x:Name="List" 
                Content="CarID List" 
@@ -74,5 +74,7 @@
                 <SolidColorBrush Color="Black" Opacity="0"/>
             </Rectangle.Fill>
         </Rectangle>
+
+        <CheckBox x:Name="MessageboxSwitch" Content="Show warning messagebox" Margin="10,122,220,0" VerticalAlignment="Top" FontSize="12" BorderThickness="0" IsChecked="True" Checked="MessageBoxSwitch_Toggled" Unchecked="MessageBoxSwitch_Toggled"/>
     </Grid>
 </Window>
