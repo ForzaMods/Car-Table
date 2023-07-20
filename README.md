@@ -6,15 +6,21 @@ A small tool written in c# to simplify the cheat engine cars script
 
 Honestly I have no idea. Its just .NET 7 so whatever that needs I guess.
 
+People were having issues with .NET Runtime, here is the installer: [Link](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.9-windows-x64-installer)
+
 <h2 align="center">Usage</h2>
 
 1. Download from github or build yourself.
 
-2. Click scan
+2. Go into car collection ingame
 
-3. Paste Id
+3. Hover over the FD Viper
 
-4. Click swap
+4. Click scan
+
+5. Paste Id
+
+6. Click swap
 
 <h2 align="center">Screenshots</h2>
 
