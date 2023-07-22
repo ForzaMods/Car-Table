@@ -22,34 +22,39 @@ namespace ForzaMods_CarTable.Resources
 
         private async void ScanForIDADdr_Click(object sender, RoutedEventArgs e)
         {
-            string addr = "";
+            MessageBox.Show("Before starting the scan you need to be in horizon promo and hovering over the fd viper, this wont continue until you click ok");
             Status.Content = "Status: Scanning for the ID Addr";
+            string address = null;
 
             await Task.Run(async () =>
             {
-                addr = ((await MainWindow.mw.M.AoBScan("?0 ?? ?? ?? ?? 01 00 00 ?0 ?? ?? ?? ?? 01 00 00 00 0? 00 00 00 00 00 00 ?0 ?? ?? ?? ?? ?? 00 00 00 00 0? 0? 00 00 00 00 ?? ?? ?? ?? ?? 01 00 00 ?? ?? ?? ?? ?? 0? 00 00 ?? ?? ?F ?? ?? 0? 00 00 ?0 ?? ?? ?? ?? 01 00 00 ?0 ?? ?? ?? ?? 01 00 00 ?0 ?? ?? ?? ?? 0? 00 00 ?? ?? ?? ?? ?? ?? 00 00 ?0 ?? ?? ?? ?? 0? 00 00 ?? ?? ?? ?? ?? 0? 00 00 ?? ?? ?? ?? ?? 0? 00 00 ?? ?? ?? ?? ?? 0? 00 00 ?0 ?? ?? ?? ?? 02 00 00 ?? ?? ?? ?? ?? 02 00 00", true, true, false)).FirstOrDefault() + 0xC0).ToString("X");
+                address = (await MainWindow.mw.M.AoBScan("BB 0B 00 00 AC 00 00 00 00 00 00 00 00 00 00 00 01", true, true, false)).FirstOrDefault().ToString("X");
             });
-            if (addr != "0" || addr != "80" || addr != "128" || addr != "C0")
-                Status.Content = "Status: Found the ID Addr";
-            else
-                Status.Content = "Status: Failed at finding the ID Addr";
 
-            MessageBox.Show(addr);
-
-            _ = Task.Run(() =>
+            if (address != null)
             {
-                while (true)
+                Status.Content = "Status: Found the ID Addresses";
+                Thread readThread = new Thread(() =>
                 {
-                    Thread.Sleep(500);
-                    Dispatcher.BeginInvoke((Action)delegate { });
-                    HoveredID.Content = MainWindow.mw.M.Read2Byte(addr);
-                }
-            });
+                    while (true)
+                    {
+                        Thread.Sleep(50);
+                        Dispatcher.BeginInvoke((Action)delegate
+                        {
+                            HoveredID.Content = MainWindow.mw.M.Read2Byte(address).ToString();
+                        });
+                    }
+                });
+                readThread.Start();
+            }
+            else
+                Status.Content = "Status: Failed at finding the ID Addresses";
         }
 
         private void Close_MouseDown(object sender, MouseButtonEventArgs e)
         {
             MainWindow.mw.IsGetIdsOpen = false;
+            MainWindow.mw.Times_Clicked = 0;
             Hide();
         }
     }

@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
@@ -17,11 +17,11 @@ namespace ForzaMods_CarTable
         public static MainWindow mw;
         private bool Attached = false;
         private bool ShowMessageBox = true;
-        private string Address = "";
+        private IEnumerable<long> Addresses = null;
         public bool IsGetIdsOpen = false;
-        public bool GlobalBeta = false; // Set to false for release on github, true is for discord tests
-        public bool FeatureBeta = true; 
-        private string FeatureString = "The Car ID Getting is only a gui part, the app may crash when you click scan"; // Set it when a feature is in beta
+        public int Times_Clicked = 0;
+        public string GlobalBeta = ""; // Set to false for release on github, true is for discord tests
+        private string FeatureString = ""; // Set it when a feature is in beta
 
         public MainWindow()
         {
@@ -31,10 +31,10 @@ namespace ForzaMods_CarTable
             AttachThread.Start();
             CultureInfo.CurrentCulture = new CultureInfo("en-GB");
 
-            if (GlobalBeta)
-                MessageBox.Show("This is a beta release, not everything has to work");
+            if (GlobalBeta != "")
+                MessageBox.Show(GlobalBeta);
 
-            if (FeatureBeta)
+            if (FeatureString != "")
                 MessageBox.Show(FeatureString);
         }
 
@@ -50,7 +50,7 @@ namespace ForzaMods_CarTable
 
                     Attached = true;
                     UpdateUI("Opened Forza Process", "Status");
-                    UpdateUI("", "");
+                    UpdateUI();
                 }
                 else
                 {
@@ -58,7 +58,7 @@ namespace ForzaMods_CarTable
                         continue;
 
                     Attached = false;
-                    UpdateUI("", "");
+                    UpdateUI();
                 }
             }
         }
@@ -77,37 +77,36 @@ namespace ForzaMods_CarTable
 
         private void Swap_Click(object sender, RoutedEventArgs e)
         {
-            if (IsNumericInput(ID_Box.Text) && Address != "0")
+            if (Regex.IsMatch(ID_Box.Text, @"^[0-9]+$") && Addresses != null)
             {
-                M.WriteMemory(Address, "2bytes", ID_Box.Text);
+                foreach (long addr in Addresses) 
+                    M.WriteMemory(addr.ToString("X"), "2bytes", ID_Box.Text);
+                
                 UpdateUI("Swapped the ID", "Status");
 
                 if (ShowMessageBox)
                     MessageBox.Show("Please verify if the price changed, if not buy at your own risk. We currently do not guarantee that it works 100%", "Warning");
             }
+            else if (Addresses == null)
+                MessageBox.Show("Scan first silly");
             else
                 MessageBox.Show("Input accepts only numbers");
-        }
-
-        private bool IsNumericInput(string text)
-        {
-            return Regex.IsMatch(text, @"^[0-9]+$");
         }
 
         private async void Scan_Click(object sender, RoutedEventArgs e)
         {
             UpdateUI("Scanning for FD Viper Address", "Status");
-
+            Addresses = null;
             
             Thread ScanThread = new Thread(async () =>
             {
                 try
                 {
-                    Address = (await M.AoBScan("BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00", true, true, false)).FirstOrDefault().ToString("X");
+                    Addresses = await M.AoBScan("BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00", true, true, false);
                 }
                 catch { }
 
-                if (Address != "0")
+                if (Addresses != null)
                     UpdateUI("Found the FD Viper Address", "Status");
                 else
                     UpdateUI("Failed at finding the address", "Status");
@@ -116,10 +115,11 @@ namespace ForzaMods_CarTable
         }
         private void List_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            Process.Start("explorer.exe", "https://github.com/ForzaMods/fh5idlist");
+            if (e.ChangedButton == MouseButton.Left)
+                Process.Start("explorer.exe", "https://github.com/ForzaMods/fh5idlist");
         }
 
-        void UpdateUI(string text, string part)
+        void UpdateUI(string text = "", string part = "")
         {
             if (part != "Status" && !Attached)
                 Dispatcher.BeginInvoke((Action)delegate ()
@@ -150,13 +150,18 @@ namespace ForzaMods_CarTable
 
         private void GetIds_Click(object sender, RoutedEventArgs e)
         {
-            var getids = new CarIds();
-
             if (!IsGetIdsOpen)
             {
+                var getids = new CarIds();
                 getids.Show();
                 IsGetIdsOpen = true;
+                Times_Clicked = 0;
             }
+
+            if (Times_Clicked > 5)
+                MessageBox.Show("Stop spamming this button retard");
+
+            Times_Clicked++;
         }
 
         private void MessageBoxSwitch_Toggled(object sender, RoutedEventArgs e)
