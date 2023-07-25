@@ -10,7 +10,7 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="#1c4a35">
-    <Grid>
+    <Grid x:Name="grid">
         <Rectangle x:Name="Topbar"
                    Fill="#123123" 
                    Height="30"
@@ -75,6 +75,6 @@
             </Rectangle.Fill>
         </Rectangle>
 
-        <CheckBox x:Name="MessageboxSwitch" Content="Show warning messagebox" Margin="10,122,220,0" VerticalAlignment="Top" FontSize="12" BorderThickness="0" IsChecked="True" Checked="MessageBoxSwitch_Toggled" Unchecked="MessageBoxSwitch_Toggled"/>
+        <CheckBox x:Name="MessageboxSwitch" Content="Show warning messagebox" Margin="10,122,220,0" VerticalAlignment="Top" FontSize="12" BorderThickness="0" IsChecked="True"/>
     </Grid>
 </Window>

@@ -16,7 +16,12 @@
 
   <ItemGroup>
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
-    <PackageReference Include="Memory.dll.x64" Version="1.2.24" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Memory">
+      <HintPath>Resources\Memory.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

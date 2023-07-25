@@ -41,7 +41,7 @@ namespace ForzaMods_CarTable.Resources
                         Thread.Sleep(50);
                         Dispatcher.BeginInvoke((Action)delegate
                         {
-                            HoveredID.Content = MainWindow.mw.M.Read2Byte(address).ToString();
+                            HoveredID.Content = MainWindow.mw.M.ReadMemory<int>(address).ToString();
                         });
                     }
                 });
