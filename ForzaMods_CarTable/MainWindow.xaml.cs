@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
@@ -24,9 +25,8 @@ namespace ForzaMods_CarTable
         {
             InitializeComponent();
             mw = this;
-            Thread AttachThread = new Thread(ForzaAttach);
-            AttachThread.Start();
             CultureInfo.CurrentCulture = new CultureInfo("en-GB");
+            Task.Run(ForzaAttach);
         }
 
         void ForzaAttach()
