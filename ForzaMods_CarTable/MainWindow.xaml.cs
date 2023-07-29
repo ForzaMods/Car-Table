@@ -52,21 +52,12 @@ namespace ForzaMods_CarTable
                     long end = (long)(Process.MainModule.BaseAddress + Process.MainModule.ModuleMemorySize);
                     string aob = null;
                     string testaddr = "0";
-                    bool ingame = false;
-                    nuint add = 0;
-
 
                     // defines what to add and the aob
                     if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
-                    {
-                        aob = "00 00 78 33 00 80 00 00 00 00 80 A9 ?? ?? ?? ?? 00 00 80 21 ?? ?? ?? 7F 00";
-                        add = 0x2a;
-                    }
+                        aob = "30 ED ?? ?? ?? ?? 00 00 80 A0 ?? ?? ?? 7F 00 00 28 A3 ?? ?? ?? 7F 00 00 10";
                     else
-                    {
-                        aob = "00 90 25 ?? ?? ?? ? 00 00 ?? ?? ?? ?? ?? ? 00 00 FF FF FF FF 00 00 00 00 00";
-                        add = 0x1;
-                    }
+                        aob = "00 DC ?? ?? ?? ?? 00 00 20 EE ?? ?? ?? 7F 00 00 01 00 00 00 00 00 00 00 00";
                         
 
                     // test address is the car id address
@@ -83,7 +74,6 @@ namespace ForzaMods_CarTable
                             break;
 
                         Thread.Sleep(50);
-                        
                     }
                         
 
@@ -101,16 +91,16 @@ namespace ForzaMods_CarTable
 
 
                     // base address for pointers
-                    while (BaseAddress == "0" || BaseAddress == null || BaseAddress == "2a" || BaseAddress == "1")
-                       BaseAddress = ((await M.AoBScan(start, end, aob, true, true)).FirstOrDefault() + add).ToString("X");
+                    while (BaseAddress == "0" || BaseAddress == null || BaseAddress == "2A" || BaseAddress == "1")
+                       BaseAddress = (await M.AoBScan(start, end, aob, true, true)).FirstOrDefault().ToString("X");
 
                     try
                     {
                         // pointers
                         if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
-                            Address = (BaseAddress + ",0x88,0x78,0x50,0x420,0x20,0x38,0x88,0x60,0x68,0x58,0x98,0x58,0x20,0x8F0,0x648");
+                            Address = (BaseAddress + ",0x20,0x20,0x50,0x420,0x20,0x38,0x88,0x60,0x68,0x58,0x98,0x58,0x20,0x8F0,0x648");
                         else
-                            Address = (BaseAddress + ",0xF0,0x30,0x80,0x10,0x60,0xA0,0x60,0x98,0x58,0x20,0x8F0,0x648");
+                            Address = (BaseAddress + ",0x58,0xC8,0x78,0x30,0x0,0x458,0x58,0xB8,0x20,0x8F0,0x648");
 
                         UpdateUI("Scanned for Viper ID", true);
 
