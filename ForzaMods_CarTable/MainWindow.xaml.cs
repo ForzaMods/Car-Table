@@ -52,23 +52,31 @@ namespace ForzaMods_CarTable
                     long end = (long)(Process.MainModule.BaseAddress + Process.MainModule.ModuleMemorySize);
                     string aob = null;
                     string testaddr = "0";
+                    int scancount = 0;
+                    int basescancount = 0;
+                    nuint add = 0x0;
 
                     // defines what to add and the aob
                     if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
                         aob = "30 ED ?? ?? ?? ?? 00 00 80 A0 ?? ?? ?? 7F 00 00 28 A3 ?? ?? ?? 7F 00 00 10";
                     else
-                        aob = "00 DC ?? ?? ?? ?? 00 00 20 EE ?? ?? ?? 7F 00 00 01 00 00 00 00 00 00 00 00";
+                    {
+                        aob = "80 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 20 EE ?? ?? ?? 7F 00 00 01 00 00 00 00 00 00 00 00";
+                        add = 0x5;
+                    }
                         
-
+                        
                     // test address is the car id address
                     while (true)
                     {
                         if (testaddr == "0" || testaddr == "2A")
                         {
-                            testaddr = ((await M.AoBScan(start, end, "00 00 50 4C 41 59 45 52 5F 43 41 52 00 00 00 00 00 00 0A", true, true, false)).FirstOrDefault() + 0x2A).ToString("X");
                             UpdateUI("Waiting for testaddr", true);
+                            testaddr = ((await M.AoBScan(start, end, "00 00 50 4C 41 59 45 52 5F 43 41 52 00 00 00 00 00 00 0A", true, true, false)).FirstOrDefault() + 0x2A).ToString("X");
+                            Thread.Sleep(50);
+                            scancount++;
                         }
-                        else if (!M.OpenProcess("ForzaHorizon5"))
+                        else if (!M.OpenProcess("ForzaHorizon5") || scancount == 50)
                             break;
                         else
                             break;
@@ -83,6 +91,8 @@ namespace ForzaMods_CarTable
                     {
                         if (M.ReadMemory<int>(testaddr) != 0 || !M.OpenProcess("ForzaHorizon5"))
                             break;
+                        else if (scancount == 50)
+                            UpdateUI("Testaddres brokey", true);
                         else
                             UpdateUI("Not ingame, cant scan", true);
 
@@ -91,22 +101,31 @@ namespace ForzaMods_CarTable
 
 
                     // base address for pointers
-                    while (BaseAddress == "0" || BaseAddress == null || BaseAddress == "2A" || BaseAddress == "1")
-                       BaseAddress = (await M.AoBScan(start, end, aob, true, true)).FirstOrDefault().ToString("X");
+                    while ((BaseAddress == "0" || BaseAddress == null || BaseAddress == "2A" || BaseAddress == "1") && 100 > basescancount)
+                    {
+                        BaseAddress = ((await M.AoBScan(start, end, aob, true, true)).FirstOrDefault() + add).ToString("X");
+                        UpdateUI("Waiting for baseaddress", true);
+                        basescancount++;
+                    }
+                       
 
                     try
                     {
-                        // pointers
-                        if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
-                            Address = (BaseAddress + ",0x20,0x20,0x50,0x420,0x20,0x38,0x88,0x60,0x68,0x58,0x98,0x58,0x20,0x8F0,0x648");
-                        else
-                            Address = (BaseAddress + ",0x58,0xC8,0x78,0x30,0x0,0x458,0x58,0xB8,0x20,0x8F0,0x648");
+                        if (basescancount != 100)
+                        {
+                            // pointers
+                            if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
+                                Address = (BaseAddress + ",0x20,0x20,0x50,0x420,0x20,0x38,0x88,0x60,0x68,0x58,0x98,0x58,0x20,0x8F0,0x648");
+                            else
+                                Address = (BaseAddress + ",0x58,0xC8,0x78,0x30,0x0,0x458,0x58,0xB8,0x20,0x8F0,0x648");
 
-                        UpdateUI("Scanned for Viper ID", true);
+                            UpdateUI(attached: true);
+                            UpdateUI("Scanned for Viper ID", true);
+                        }
+                        else { MessageBox.Show("Baseaddress is 0, restart the app until it fixes itself. might aswell wait for an update of this program"); }
 
-                    } catch { continue; }
+                    } catch { MessageBox.Show("failed"); }
 
-                    UpdateUI(attached: true);
                 }
                 else
                 {
