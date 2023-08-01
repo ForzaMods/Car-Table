@@ -9,19 +9,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Forms = System.Windows.Forms;
+using System.Windows.Threading;
+using System.Windows.Media;
 
 namespace ForzaMods_CarTable
 {
     public partial class MainWindow : Window
-{
+    {
         // variables
         public Mem M = new Mem();
         public static MainWindow mw;
         private bool Attached = false;
-        private string BaseAddress = null;
         private string Address = null;
-        public bool IsGetIdsOpen = false;
-        public int Times_Clicked = 0;
+        private string BaseAddress = null;
+        private DispatcherTimer rainbowTimer = new DispatcherTimer();
+        private Brush[] rainbowBrushes = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Blue, Brushes.Indigo, Brushes.Violet };
+        private int currentBrushIndex = 0;
 
         public MainWindow()
         {
@@ -29,7 +33,24 @@ namespace ForzaMods_CarTable
             mw = this;
             // setting the culture helped some people scan in the older versions, idk why ??
             CultureInfo.CurrentCulture = new CultureInfo("en-GB");
-            Task.Run(ForzaAttach);
+            Task.Run(() => ForzaAttach());
+            MessageBox.Show("The only official download is the forzamods github or unknowncheats. " +
+                            "if you downloaded this off anywhere else than these sources you got scammed. " +
+                            "please follow the only tutorial thats the button in the app." +
+                            "you should never listen to other tutorials that you see.");
+        }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            rainbowTimer.Interval = TimeSpan.FromMilliseconds(500);
+            rainbowTimer.Tick += RainbowTimer_Tick;
+            rainbowTimer.Start();
+        }
+
+        private void RainbowTimer_Tick(object sender, EventArgs e)
+        {
+            mw.Youtube.Fill = rainbowBrushes[currentBrushIndex];
+            mw.Video.Foreground = rainbowBrushes[currentBrushIndex];
+            currentBrushIndex = (currentBrushIndex + 1) % rainbowBrushes.Length;
         }
 
         // main attach thread
@@ -45,86 +66,67 @@ namespace ForzaMods_CarTable
 
                     Attached = true;
                     UpdateUI("Opened Forza Process", true);
-                    
-                    // more variables such as where to start scan, aob string ect
-                    Process Process = Process.GetProcessesByName("ForzaHorizon5")[0];
-                    long start = (long)Process.MainModule.BaseAddress;
-                    long end = (long)(Process.MainModule.BaseAddress + Process.MainModule.ModuleMemorySize);
-                    string aob = null;
-                    string testaddr = "0";
+
+                    Process Target = Process.GetProcessesByName("ForzaHorizon5")[0];
                     int scancount = 0;
                     int basescancount = 0;
-                    nuint add = 0x0;
 
-                    // defines what to add and the aob
-                    if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
-                        aob = "30 ED ?? ?? ?? ?? 00 00 80 A0 ?? ?? ?? 7F 00 00 28 A3 ?? ?? ?? 7F 00 00 10";
-                    else
-                    {
-                        aob = "80 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 20 EE ?? ?? ?? 7F 00 00 01 00 00 00 00 00 00 00 00";
-                        add = 0x5;
-                    }
-                        
-                        
-                    // test address is the car id address
-                    while (true)
-                    {
-                        if (testaddr == "0" || testaddr == "2A")
-                        {
-                            UpdateUI("Waiting for testaddr", true);
-                            testaddr = ((await M.AoBScan(start, end, "00 00 50 4C 41 59 45 52 5F 43 41 52 00 00 00 00 00 00 0A", true, true, false)).FirstOrDefault() + 0x2A).ToString("X");
-                            Thread.Sleep(50);
-                            scancount++;
-                        }
-                        else if (!M.OpenProcess("ForzaHorizon5") || scancount == 50)
-                            break;
-                        else
-                            break;
-
-                        Thread.Sleep(50);
-                    }
-                        
 
                     // checks if player is ingame
                     // used as reading car id and checking if its not 0
                     while (true)
                     {
-                        if (M.ReadMemory<int>(testaddr) != 0 || !M.OpenProcess("ForzaHorizon5"))
-                            break;
-                        else if (scancount == 50)
-                            UpdateUI("Testaddres brokey", true);
-                        else
-                            UpdateUI("Not ingame, cant scan", true);
+                        string testaddr = "0";
+
+                        while (true)
+                        {
+                            if (testaddr == "0" || testaddr == "2A")
+                            {
+                                UpdateUI("Waiting for testaddr", true);
+                                testaddr = ((await M.AoBScan((long)Target.MainModule.BaseAddress, (long)(Target.MainModule.BaseAddress + Target.MainModule.ModuleMemorySize), "00 00 50 4C 41 59 45 52 5F 43 41 52 00 00 00 00 00 00 0A", true, true, false)).FirstOrDefault() + 0x2A).ToString("X");
+                                Thread.Sleep(50);
+                                scancount++;
+                            }
+                            else if (!M.OpenProcess("ForzaHorizon5") || scancount == 50 || (testaddr != "0" || testaddr != "2A")) break;
+                        }
+
+                        if (M.ReadMemory<int>(testaddr) != 0 || !M.OpenProcess("ForzaHorizon5")) break;
+                        else if (scancount == 50) UpdateUI("Testaddres brokey", true);
+                        else UpdateUI("Not ingame, cant scan", true);
 
                         Thread.Sleep(500);
                     }
 
 
                     // base address for pointers
-                    while ((BaseAddress == "0" || BaseAddress == null || BaseAddress == "2A" || BaseAddress == "1") && 100 > basescancount)
+                    while ((BaseAddress == "0" || BaseAddress == null || BaseAddress == "2A" || BaseAddress == "5") && 100 > basescancount)
                     {
-                        BaseAddress = ((await M.AoBScan(start, end, aob, true, true)).FirstOrDefault() + add).ToString("X");
+                        if (Target.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
+                            BaseAddress = (await M.AoBScan((long)Target.MainModule.BaseAddress, (long)(Target.MainModule.BaseAddress + Target.MainModule.ModuleMemorySize), "?0 ED ?? ?? ?? ?? 00 00 80 A0 ?? ?? ?? 7F 00 00 28 A3 ?? ?? ?? 7F 00 00 ?0", true, true, false)).FirstOrDefault().ToString("X");
+                        else
+                            BaseAddress = ((await M.AoBScan((long)Target.MainModule.BaseAddress, (long)(Target.MainModule.BaseAddress + Target.MainModule.ModuleMemorySize), "80 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 20 EE ?? ?? ?? 7F 00 00 01 00 00 00 00 00 00 00 00", true, true)).FirstOrDefault() + 0x5).ToString("X");
+
                         UpdateUI("Waiting for baseaddress", true);
+                        Thread.Sleep(25);
                         basescancount++;
                     }
-                       
+
 
                     try
                     {
                         if (basescancount != 100)
                         {
                             // pointers
-                            if (Process.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
+                            if (Target.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
                                 Address = (BaseAddress + ",0x20,0x20,0x50,0x420,0x20,0x38,0x88,0x60,0x68,0x58,0x98,0x58,0x20,0x8F0,0x648");
                             else
                                 Address = (BaseAddress + ",0x58,0xC8,0x78,0x30,0x0,0x458,0x58,0xB8,0x20,0x8F0,0x648");
 
-                            UpdateUI(attached: true);
-                            UpdateUI("Scanned for Viper ID", true);
+                            UpdateUI("Scanned for Viper ID", true, true);
                         }
                         else { MessageBox.Show("Baseaddress is 0, restart the app until it fixes itself. might aswell wait for an update of this program"); }
 
-                    } catch { MessageBox.Show("failed"); }
+                    } catch { MessageBox.Show("failed"); continue; }
 
                 }
                 else
@@ -133,12 +135,11 @@ namespace ForzaMods_CarTable
                         continue;
 
                     Attached = false;
-                    UpdateUI("Doing Nothing", true);
-                    UpdateUI();
+                    UpdateUI("Doing Nothing", true, true);
                 }
             }
         }
-        
+
         // move the window
         private void Topbar_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -152,10 +153,10 @@ namespace ForzaMods_CarTable
         {
             if (e.ChangedButton == MouseButton.Left)
             {
-                Environment.Exit(0);
-
                 if (Attached)
                     M.WriteMemory<int>(Address, 3003);
+
+                Environment.Exit(0);
             }
         }
 
@@ -168,38 +169,36 @@ namespace ForzaMods_CarTable
 
         // updating ui, status and shit
         // this is like ultra shit code and I hate what Ive done but it works so I dont really care
-        void UpdateUI(string text = "", bool status = false, bool attached = false)
+        void UpdateUI(string text = "", bool status = false, bool updatebuttons = false)
         {
-            if (!status)
+            if (updatebuttons)
                 Dispatcher.BeginInvoke((Action)delegate ()
                 {
-                    GetIds.IsEnabled = attached;
-                    ID_Box.IsEnabled = attached;
+                    GetIds.IsEnabled = Attached;
+                    ID_Box.IsEnabled = Attached;
                 });
 
-            else
-                Dispatcher.BeginInvoke((Action)delegate ()
-                {
-                    Status.Content = "Status: " + text;
-                });
+            if (status)
+                Dispatcher.BeginInvoke((Action)delegate () { Status.Content = "Status: " + text; });
         }
 
         private void GetIds_Click(object sender, RoutedEventArgs e)
         {
+            var c = new CarIds();
+
             // opens id window
-            if (!IsGetIdsOpen)
+            if (!c.IsGetIdsOpen)
             {
-                var getids = new CarIds();
-                getids.Show();
-                IsGetIdsOpen = true;
-                Times_Clicked = 0;
+                c.Show();
+                c.IsGetIdsOpen = true;
+                c.Times_Clicked = 0;
             }
 
             // easter egg
-            if (Times_Clicked > 5)
+            if (c.Times_Clicked > 5)
                 MessageBox.Show("Stop spamming this button retard");
 
-            Times_Clicked++;
+            c.Times_Clicked++;
         }
 
         // mem writing
@@ -214,13 +213,29 @@ namespace ForzaMods_CarTable
                 UpdateUI("Swapped the ID", true);
             }
             // checking for base address
-            else if (BaseAddress == "0" || BaseAddress == null || BaseAddress == "2a" || BaseAddress == "1")
+            else if (BaseAddress == "0" || BaseAddress == null || BaseAddress == "2a" || BaseAddress == "5")
                 MessageBox.Show("Base address for the pointer is incorrect. Please restart your game and tool", "Baseaddress error");
             // error if not correct
             else
             {
                 MessageBox.Show("Input accepts only numbers");
                 M.WriteMemory<int>(Address, 3003);
+            }
+        }
+
+        private async void Youtube_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                Forms.DialogResult result = (Forms.DialogResult)MessageBox.Show("This is slightly outdated, you just paste in the id now instead of scanning for all of these things and clicking swap." +
+                                                       "However you still can follow the tutorial because not much has changed.");
+
+                if (result == Forms.DialogResult.OK)
+                    Process.Start("explorer.exe", "https://youtu.be/ApcQH8OhuPQ");
+
+                rainbowTimer.Stop();
+                mw.Youtube.Fill = Brushes.White;
+                mw.Video.Foreground = Brushes.White;
             }
         }
     }

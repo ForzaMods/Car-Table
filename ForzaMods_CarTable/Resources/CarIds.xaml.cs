@@ -9,6 +9,9 @@ namespace ForzaMods_CarTable.Resources
 {
     public partial class CarIds : Window
     {
+        public int Times_Clicked = 0;
+        public bool IsGetIdsOpen = false;
+
         public CarIds()
         {
             InitializeComponent();
@@ -44,10 +47,7 @@ namespace ForzaMods_CarTable.Resources
                     while (true)
                     {
                         Thread.Sleep(50);
-                        Dispatcher.BeginInvoke((Action)delegate
-                        {
-                            HoveredID.Content = MainWindow.mw.M.ReadMemory<int>(address).ToString();
-                        });
+                        Dispatcher.BeginInvoke((Action)delegate { HoveredID.Content = MainWindow.mw.M.ReadMemory<int>(address).ToString(); });
                     }
                 });
                 readThread.Start();
@@ -58,8 +58,8 @@ namespace ForzaMods_CarTable.Resources
 
         private void Close_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            MainWindow.mw.IsGetIdsOpen = false;
-            MainWindow.mw.Times_Clicked = 0;
+            IsGetIdsOpen = false;
+            Times_Clicked = 0;
             Hide();
         }
     }
