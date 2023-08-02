@@ -33,18 +33,19 @@
 
         <TextBox x:Name="ID_Box"
                  BorderThickness="0"
-                 Height="25" Margin="5,35,110,89" IsEnabled="False" TextChanged="ID_Box_TextChanged"/>
+                 Foreground="DarkGray" Height="25" Margin="5,35,110,89" IsEnabled="False" TextChanged="ID_Box_TextChanged"/>
 
         <Label x:Name="Status" Focusable="False"
                Content="Status: Doing Nothing"
                FontSize="12"
-               VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="10,0,0,9"/>
+               Foreground="White" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="10,0,0,9"/>
 
         <Label x:Name="List" 
                Content="CarID List" 
                HorizontalAlignment="Right" VerticalAlignment="Bottom" 
                Margin="0,0,35,9" 
-               MouseDown="List_MouseDown" Cursor="Hand"/>
+               MouseDown="List_MouseDown" Cursor="Hand"
+               Foreground="White"/>
 
         <Label x:Name="Video" 
                Content="Video Tut" 

@@ -34,10 +34,11 @@ namespace ForzaMods_CarTable
             // setting the culture helped some people scan in the older versions, idk why ??
             CultureInfo.CurrentCulture = new CultureInfo("en-GB");
             Task.Run(() => ForzaAttach());
-            MessageBox.Show("The only official download is the forzamods github or unknowncheats. " +
-                            "if you downloaded this off anywhere else than these sources you got scammed. " +
-                            "please follow the only tutorial thats the button in the app." +
-                            "you should never listen to other tutorials that you see.");
+            MessageBox.Show("This is opensource and free." +
+                            "The only official download is the ForzaMods Github or UC. " +
+                            "If you downloaded this off anywhere else than these sources you got scammed. " +
+                            "Please follow the only proper tutorial thats the button in the app or in the UC post." +
+                            "You should never listen to other tutorials that you see.");
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -227,12 +228,7 @@ namespace ForzaMods_CarTable
         {
             if (e.ChangedButton == MouseButton.Left)
             {
-                Forms.DialogResult result = (Forms.DialogResult)MessageBox.Show("This is slightly outdated, you just paste in the id now instead of scanning for all of these things and clicking swap." +
-                                                       "However you still can follow the tutorial because not much has changed.");
-
-                if (result == Forms.DialogResult.OK)
-                    Process.Start("explorer.exe", "https://youtu.be/ApcQH8OhuPQ");
-
+               Process.Start("explorer.exe", "https://youtu.be/ApcQH8OhuPQ");
                 rainbowTimer.Stop();
                 mw.Youtube.Fill = Brushes.White;
                 mw.Video.Foreground = Brushes.White;
