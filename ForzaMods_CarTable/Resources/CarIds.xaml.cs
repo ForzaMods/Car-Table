@@ -27,7 +27,7 @@ namespace ForzaMods_CarTable.Resources
         // main scan thread
         private async void ScanForIDADdr_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Before starting the scan you need to be in horizon promo and hovering over the fd viper, this wont continue until you click ok");
+            MessageBox.Show("Before starting the scan you need to be in horizon promo (NOT car collection) and hovering over the fd viper, this wont continue until you click ok");
             Status.Content = "Status: Scanning for the ID Addr";
             string address = null;
 

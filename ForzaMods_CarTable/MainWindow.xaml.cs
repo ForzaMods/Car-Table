@@ -20,26 +20,38 @@ namespace ForzaMods_CarTable
         // variables
         public Mem M = new Mem();
         public static MainWindow mw;
-        private bool Attached = false;
-        private string Address = null;
-        private string BaseAddress = null;
-        private DispatcherTimer rainbowTimer = new DispatcherTimer();
-        private Brush[] rainbowBrushes = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Blue, Brushes.Indigo, Brushes.Violet };
-        private int currentBrushIndex = 0;
+        public bool Attached = false;
+        public string Address = null;
+        public string BaseAddress = null;
+        public DispatcherTimer rainbowTimer = new DispatcherTimer();
+        public Brush[] rainbowBrushes = { Brushes.Red, Brushes.Orange, Brushes.Yellow, Brushes.Green, Brushes.Blue, Brushes.Indigo, Brushes.Violet };
+        public int currentBrushIndex = 0;
+        string testaddr = "0";
+        public bool isloaded = false;
 
         public MainWindow()
         {
             InitializeComponent();
             mw = this;
+            Loaded += MainWindow_Loaded;
             // setting the culture helped some people scan in the older versions, idk why ??
             CultureInfo.CurrentCulture = new CultureInfo("en-GB");
             Task.Run(() => ForzaAttach());
-            MessageBox.Show("This is opensource and free." +
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!isloaded)
+            {
+                MessageBox.Show("This is opensource and free." +
                             "The only official download is the ForzaMods Github or UC. " +
                             "If you downloaded this off anywhere else than these sources you got scammed. " +
                             "Please follow the only proper tutorial thats the button in the app or in the UC post." +
                             "You should never listen to other tutorials that you see.");
+                isloaded = true;
+            }
         }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             rainbowTimer.Interval = TimeSpan.FromMilliseconds(500);
@@ -77,7 +89,7 @@ namespace ForzaMods_CarTable
                     // used as reading car id and checking if its not 0
                     while (true)
                     {
-                        string testaddr = "0";
+                        
 
                         while (true)
                         {
@@ -93,7 +105,7 @@ namespace ForzaMods_CarTable
 
                         if (M.ReadMemory<int>(testaddr) != 0 || !M.OpenProcess("ForzaHorizon5")) break;
                         else if (scancount == 50) UpdateUI("Testaddres brokey", true);
-                        else UpdateUI("Not ingame, cant scan", true);
+                        else if (M.ReadMemory<int>(testaddr) == 0 && (testaddr != "0" || testaddr != null) ) UpdateUI("Not ingame, cant scan", true);
 
                         Thread.Sleep(500);
                     }
@@ -103,7 +115,7 @@ namespace ForzaMods_CarTable
                     while ((BaseAddress == "0" || BaseAddress == null || BaseAddress == "2A" || BaseAddress == "5") && 100 > basescancount)
                     {
                         if (Target.MainModule.FileName.Contains("Microsoft.624F8B84B80"))
-                            BaseAddress = (await M.AoBScan((long)Target.MainModule.BaseAddress, (long)(Target.MainModule.BaseAddress + Target.MainModule.ModuleMemorySize), "?0 ED ?? ?? ?? ?? 00 00 80 A0 ?? ?? ?? 7F 00 00 28 A3 ?? ?? ?? 7F 00 00 ?0", true, true, false)).FirstOrDefault().ToString("X");
+                            BaseAddress = ((await M.AoBScan((long)Target.MainModule.BaseAddress, (long)(Target.MainModule.BaseAddress + Target.MainModule.ModuleMemorySize), "0? 00 00 30 ED ?? ?? ?? ?? 00 00 80 A0 ?? ?? ?? 7F 00 00 ?? ?? ?? ?? ?? 7F 00 00 ?0", true, true, false)).FirstOrDefault() + 0x3).ToString("X");
                         else
                             BaseAddress = ((await M.AoBScan((long)Target.MainModule.BaseAddress, (long)(Target.MainModule.BaseAddress + Target.MainModule.ModuleMemorySize), "80 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 20 EE ?? ?? ?? 7F 00 00 01 00 00 00 00 00 00 00 00", true, true)).FirstOrDefault() + 0x5).ToString("X");
 
@@ -125,9 +137,21 @@ namespace ForzaMods_CarTable
 
                             UpdateUI("Scanned for Viper ID", true, true);
                         }
-                        else { MessageBox.Show("Baseaddress is 0, restart the app until it fixes itself. might aswell wait for an update of this program"); }
+                        else 
+                        {
+                            Forms.DialogResult messageboxResult = Forms.MessageBox.Show("The baseaddress has failed. do you want to try the old method?", "Failed", Forms.MessageBoxButtons.YesNo);
 
-                    } catch { MessageBox.Show("failed"); continue; }
+                            if (messageboxResult == Forms.DialogResult.OK)
+                            {
+                                _ = Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() =>
+                                {
+                                    mw.Hide();
+                                    Old_MethodWindow.OLD.Show();
+                                }));
+                            }
+                        }
+
+                    } catch { Forms.MessageBox.Show("failed"); continue; }
 
                 }
                 else
@@ -154,7 +178,7 @@ namespace ForzaMods_CarTable
         {
             if (e.ChangedButton == MouseButton.Left)
             {
-                if (Attached)
+                if (Attached && M.ReadMemory<int>(testaddr) != 0)
                     M.WriteMemory<int>(Address, 3003);
 
                 Environment.Exit(0);
@@ -233,6 +257,13 @@ namespace ForzaMods_CarTable
                 mw.Youtube.Fill = Brushes.White;
                 mw.Video.Foreground = Brushes.White;
             }
+        }
+
+        private void GetIds_Copy_Click(object sender, RoutedEventArgs e)
+        {   
+            var old = new Old_MethodWindow();
+            old.Show();
+            mw.Hide();
         }
     }
 }
