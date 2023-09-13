@@ -35,7 +35,6 @@ public partial class MainWindow : Window
     {
         while (true)
         {
-            Dispatcher.BeginInvoke(() => { ID_Box.IsEnabled = Attached; });
             Thread.Sleep(1000);
 
             if (M.OpenProcess("ForzaHorizon5"))
