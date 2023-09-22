@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,16 +10,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Memory;
+using static Memory.Imps;
 
 namespace ForzaMods_CarTable;
 
 public partial class MainWindow : Window
 {
-    private string Address;
-    private bool Attached;
-
     // variables
     private readonly Mem M = new();
+    private string? Address;
+    private bool Attached;
 
     public MainWindow()
     {
@@ -29,6 +31,11 @@ public partial class MainWindow : Window
                         "Please follow the only proper tutorial thats the button in the app or in the UC post." +
                         "You should never listen to other tutorials that you see.");
     }
+
+    // dll imports
+    [DllImport("kernel32.dll")]
+    private static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer,
+        uint dwLength);
 
     // main attach thread
     private void ForzaAttach()
@@ -119,12 +126,96 @@ public partial class MainWindow : Window
     // find addr func
     private void ScanForID(object sender, RoutedEventArgs e)
     {
+        if (!Attached)
+            return;
+
         Task.Run(async () =>
         {
-            Address = (await M.AoBScan(0x10000000000, 0x30000000000,
-                    "BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", true)).FirstOrDefault()
-                .ToString("X");
-            Dispatcher.Invoke(() => { Status.Content = "Scanned for ID,\nAddr: " + Address; });
+            try
+            {
+                var time = new Stopwatch();
+                time.Start();
+                CultureInfo.CurrentCulture = new CultureInfo("en-GB");
+
+                Dispatcher.Invoke(() =>
+                {
+                    ScanForIDBtn.IsEnabled = false;
+                    Status.Content = "Scanning for addr";
+                });
+                var count = 0;
+
+                var si = new SYSTEM_INFO();
+                GetSystemInfo(out si);
+
+                long ScanStartAddr;
+                long ScanEndAddr;
+
+                ulong _address = 0xFFFFFFFFFF;
+                var process = Process.GetProcessesByName("ForzaHorizon5")[0];
+                var m = new MEMORY_BASIC_INFORMATION();
+                VirtualQueryEx(process.Handle, (IntPtr)_address, out m, si.PageSize);
+                
+                _address = m.BaseAddress + (ulong)m.RegionSize;
+                ScanStartAddr = (long)m.BaseAddress;
+                
+                while (_address < 0x3FFFFFFFFFF)
+                {
+                    VirtualQueryEx(process.Handle, (IntPtr)_address, out m, si.PageSize);
+
+                    if (_address == m.BaseAddress + (ulong)m.RegionSize)
+                        break;
+
+                    if (m.RegionSize > 70000000000000 && count > 0)
+                        break;
+
+                    ScanEndAddr = (long)m.BaseAddress + m.RegionSize;
+
+                    if (ScanEndAddr - ScanStartAddr > 500000000)
+                        for (var i = 1; i < 2; i++)
+                            Address = (await M.AoBScan(ScanStartAddr,
+                                    ScanStartAddr + (ScanEndAddr - ScanStartAddr) / 2 * i,
+                                    "BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", true)).FirstOrDefault().ToString("X");
+                    else
+                        Address = (await M.AoBScan(ScanStartAddr, ScanEndAddr,
+                                "BB 0B 00 00 00 00 00 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00", true)).FirstOrDefault().ToString("X");
+
+
+                    ScanStartAddr = ScanEndAddr;
+
+
+                    if (Address != "0")
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            time.Stop();
+                            ScanForIDBtn.IsEnabled = true;
+                            Status.Content = "Scan finished.\nAddr:" + Address + "\nScan took:" +
+                                             time.Elapsed.TotalSeconds;
+                        });
+                        break;
+                    }
+
+                    _address = m.BaseAddress + (ulong)m.RegionSize;
+                    count++;
+                }
+
+
+                if (Address == "0")
+                    Dispatcher.Invoke(() =>
+                    {
+                        time.Stop();
+                        ScanForIDBtn.IsEnabled = true;
+                        Status.Content = "Scan finished. Failed.";
+                    });
+            }
+            catch (Exception error)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    ScanForIDBtn.IsEnabled = true;
+                    Status.Content = "Scan wasnt finished. Failed.\nError: " + error.Message;
+                });
+            }
         });
     }
 }

@@ -11,8 +11,8 @@
     <UseWindowsForms>False</UseWindowsForms>
     <Company>sza</Company>
     <Product>Car Table</Product>
-    <AssemblyVersion>1.8.0.0</AssemblyVersion>
-    <FileVersion>1.8.0.0</FileVersion>
+    <AssemblyVersion>1.8.0.1</AssemblyVersion>
+    <FileVersion>1.8.0.1</FileVersion>
     <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
 
