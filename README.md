@@ -1,6 +1,8 @@
 <h1 align="center">Forza Mods Car Table</h1>
 
-A convenient tool for unlocking cars in Forza Horizon 5.
+A convenient tool for unlocking cars in Forza Horizon 5. 
+
+(I did not make the sql exploit, the person behind it wants to stay anonymous)
 
 <h2 align="center">Table Of Contents</h2>
 
