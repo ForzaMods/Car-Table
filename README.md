@@ -1,6 +1,15 @@
 <h1 align="center">Forza Mods Car Table</h1>
 
-A small tool written in c# to simplify the cheat engine cars script
+A convenient tool for unlocking cars in Forza Horizon 5.
+
+<h2 align="center">Table Of Contents</h2>
+
+- [Header](#Forza-Mods-Car-Table)
+  - [Table of Contents](#table-of-contents)
+  - [Requirements](#Requirements)
+  - [What can it do?](#what-can-it-do)
+  - [Discord Server](#discord-server)
+  - [Disclaimer](#Disclaimer)
 
 <h2 align="center">Requirements</h2>
 
@@ -8,23 +17,16 @@ Honestly I have no idea. Its just .NET 7 so whatever that needs I guess.
 
 People were having issues with .NET Runtime, here is the installer: [Link](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.9-windows-x64-installer)
 
-<h2 align="center">Usage</h2>
+<h2 align="center">What can it do?</h2>
 
-1. Download from github or build yourself.
+- Show all cars in the autoshow
+- Make all cars free
+- Make all visual and performance upgrades free
+- Quick add all and rare cars (requires car pass)
 
-2. Go into car collection ingame
+<h2 align="center">Discord server</h2>
 
-3. Hover over the FD Viper
-
-4. Click scan
-
-5. Paste Id
-
-6. Click swap
-
-<h2 align="center">Screenshots</h2>
-
-![Screenshot](/Images/Screenshot.png)
+Please join the [discord server](https://discord.gg/forzamods), (do not its full of idiots)
 
 <h2 align="center">Disclaimer</h2>
 
