@@ -76,6 +76,16 @@
                                           VerticalAlignment="Center"
                                           Margin="25 0"
                                           Toggled="Switch_OnToggled"/>
+                        
+                        <mah:ToggleSwitch x:Name="RareCars"
+                                          Content="Rare Cars"
+                                          MinWidth="0"
+                                          Focusable="False"
+                                          IsEnabled="False"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center"
+                                          Margin="25 0"
+                                          Toggled="Switch_OnToggled"/>
                     
                         <mah:ToggleSwitch x:Name="FreeCars"
                                           Content="Free Cars"

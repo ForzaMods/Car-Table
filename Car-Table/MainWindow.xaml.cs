@@ -38,6 +38,7 @@ public partial class MainWindow
     private void Window_OnClosing(object? sender, CancelEventArgs e)
     {
         AllCars.IsOn = false;
+        RareCars.IsOn = false;
         FreeCars.IsOn = false;
         AntiAntiCheat?.Install();
     }
@@ -56,12 +57,26 @@ public partial class MainWindow
         {
             case "AllCars" when isOn:
             {
+                RareCars.IsEnabled = false;
+                
                 _addresses?.Query("CREATE TABLE AutoshowTable(Id INT, NotAvailableInAutoshow INT); INSERT INTO AutoshowTable SELECT Id, NotAvailableInAutoshow FROM Data_Car; UPDATE Data_Car SET NotAvailableInAutoshow = 0;");
                 break;
             }
             
+            // credits to ucxh/hailstalin for sql query
+            case "RareCars" when isOn:
+            {
+                AllCars.IsEnabled = false;
+                
+                _addresses?.Query("CREATE TABLE AutoshowTable(Id INT, NotAvailableInAutoshow INT); INSERT INTO AutoshowTable SELECT Id, NotAvailableInAutoshow FROM Data_Car; UPDATE Data_Car SET NotAvailableInAutoshow = (NotAvailableInAutoshow-1)* -1;");
+                break;
+            }
+            
+            case "RareCars" when !isOn:
             case "AllCars" when !isOn:
             {
+                AllCars.IsEnabled = true;
+                RareCars.IsEnabled = true;
                 _addresses?.Query("UPDATE Data_Car SET NotAvailableInAutoshow = (SELECT NotAvailableInAutoshow FROM AutoshowTable WHERE Data_Car.Id == AutoshowTable.Id); DROP TABLE AutoshowTable;");
                 break;
             }
@@ -101,6 +116,11 @@ public partial class MainWindow
 
     private void QuickAdd_OnClick(object sender, RoutedEventArgs e)
     {
+        if (MessageBox.Show("Warning", "U can only use this with carpass, continue?", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
         sender.GetType().GetProperty("IsEnabled")?.SetValue(sender, false);
         
         switch ((string)sender.GetType().GetProperty("Name")!.GetValue(sender)!)
